@@ -1,0 +1,327 @@
+enum RadioMessage {
+    message1 = 49434,
+    Twentydammage = 62641
+}
+
+namespace SpriteKind {
+    export const regenpotion = SpriteKind.create()
+    export const Boss = SpriteKind.create()
+    export const toolbariteam = SpriteKind.create()
+    export const strength_potion = SpriteKind.create()
+}
+
+namespace StatusBarKind {
+    export const wepobn = StatusBarKind.create()
+    export const BossHeath = StatusBarKind.create()
+}
+
+let toolbar: Inventory.Toolbar = null
+let Boss_health: StatusBarSprite = null
+let DA_BOSS_1: Sprite = null
+let Strength_potion: Sprite = null
+let projectile: Sprite = null
+let Normal_ghost_health: StatusBarSprite = null
+let Player_health: StatusBarSprite = null
+let myEnemy: Sprite = null
+let Dungeon_character: Sprite = null
+let projectile_number = 0
+let Regeneration_potion: Sprite = null
+let Strength_buff = 0
+
+function add_itea(name: string, image2: Image) {
+    toolbar.get_items().push(Inventory.create_item(name, image2))
+    toolbar.update()
+}
+
+function revoveiteam(name: string) {
+    toolbar.get_items().removeAt(findvalue(name))
+    toolbar.update()
+}
+
+function findvalue(name: string) {
+    for (let value of toolbar.get_items()) {
+        if (value.get_text(ItemTextAttribute.Name) == name) {
+            return toolbar.get_items().indexOf(value)
+        }
+    }
+    return -1
+}
+
+function createtoolabrr() {
+    toolbar = Inventory.create_toolbar([], 10)
+    toolbar.set_number(ToolbarNumberAttribute.SelectedIndex, -1)
+    toolbar.left = -30
+    toolbar.bottom = 120
+    toolbar.z = 50
+    scaling.scaleToPercent(toolbar, 70, ScaleDirection.Uniformly, ScaleAnchor.Middle)
+    toolbar.setFlag(SpriteFlag.RelativeToCamera, true)
+}
+
+controller.up.onEvent(ControllerButtonEvent.Pressed, function () {
+    if (Dungeon_character.vy == 0) {
+        Dungeon_character.vy = -110
+        music.play(music.createSoundEffect(WaveShape.Square, 400, 600, 255, 0, 100, SoundExpressionEffect.None, InterpolationCurve.Linear), music.PlaybackMode.InBackground)
+    }
+})
+
+controller.B.onEvent(ControllerButtonEvent.Pressed, function () {
+    if (projectile_number > 0) {
+        projectile = sprites.createProjectileFromSprite(assets.image`ninja star`, Dungeon_character, 65, 65)
+        projectile_number += -1
+    }
+})
+
+scene.onOverlapTile(SpriteKind.Player, assets.tile`myTile`, function (sprite, location) {
+    if (controller.A.isPressed()) {
+        tiles.setCurrentTilemap(tilemap`level7`)
+        projectile_number += 20
+    }
+    collectItem(sprite, location)
+})
+
+scene.onOverlapTile(SpriteKind.Player, sprites.dungeon.collectibleBlueCrystal, function (sprite, location) {
+    collectItem(sprite, location)
+})
+
+scene.onOverlapTile(SpriteKind.Player, sprites.dungeon.collectibleRedCrystal, function (sprite, location) {
+    collectItem(sprite, location)
+})
+
+scene.onOverlapTile(SpriteKind.Player, sprites.dungeon.collectibleInsignia, function (sprite, location) {
+    collectItem(sprite, location)
+})
+
+sprites.onOverlap(SpriteKind.Boss, SpriteKind.Player, function (sprite, otherSprite) {
+    animation.runImageAnimation(
+        DA_BOSS_1,
+        assets.animation`a mob`,
+        200,
+        false
+    )
+    Player_health.value += -0.4
+})
+
+controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
+    animation.runImageAnimation(
+        Dungeon_character,
+        img`
+            . . . . . . . . . . . . . . . . 
+            . . . . . . . . . . . . . . . . 
+            . . . . . . . . . . . . . . . . 
+            . . . . . . . . . . . . . . . . 
+            . . . . e e e e e . . . . . . . 
+            . . . . e e d d e . . . . . . . 
+            . . . . 1 1 d 1 1 . . . . . . . 
+            . . . . 1 f d f 1 . . . 1 2 . .            
+            . . . . 1 d d d 1 . . . 1 2 . .
+            . . . . 1 1 1 1 1 1 . . . 1 2 . .
+            . . . . 1 1 1 1 1 1 . . . 1 2 . .
+            . . . . 1 d d d 1 . . . . 1 2 . .
+            . . . . d d d d d . . . . 1 2 . .
+            . . . . d d d d d . . . . 1 2 . .
+            . . . . d d d d d . . . . 1 2 . .
+            . . . . d d d d d . . . . 1 2 . .
+            . . . . d d d d d . . . . 1 2 . .
+            . . . . d d d d d . . . . 1 2 . .
+            . . . . d d . . . . 1 2 2 2 1 2 1 . . . . . .
+            . . . . . 1 1 1 1 1 . . . . . . .
+            . . . . . . . . . . . . . . . . .
+            . . . . . . . . . . . . . . . . .
+            . . . . . . . . . . . . . . . . .
+            . . . . . . . . . . . . . . . . .
+    `, SpriteKind.regenpotion)
+
+    projectile_number = 10
+
+    Dungeon_character = sprites.create(assets.image`Player`, SpriteKind.Player)
+    scene.setBackgroundImage(img`
+    ................................................................................................................................................................
+    ................................................................................................................................................................
+    ................................................................................................................................................................
+    ................................................................................................................................................................
+    ................................................................................................................................................................
+    ................................................................................................................................................................
+    ................................................................................................................................................................
+    ................................................................................................................................................................
+    ................................................................................................................................................................
+    ................................................................................................................................................................
+    ................................................................................................................................................................
+    ................................................................................................................................................................
+    ................................................................................................................................................................
+    ................................................................................................................................................................
+    ................................................................................................................................................................
+    ................................................................................................................................................................
+    ................................................................................................................................................................
+    ................................................................................................................................................................
+    ................................................................................................................................................................
+    ................................................................................................................................................................
+    ................................................................................................................................................................
+    ................................................................................................................................................................
+    ................................................................................................................................................................
+    ................................................................................................................................................................
+    ................................................................................................................................................................
+    `, 128, 96)
+
+    scene.cameraFollowSprite(Dungeon_character)
+
+    myEnemy = sprites.create(assets.image`Mob`, SpriteKind.Enemy)
+
+    Player_health = statusbars.create(20, 4, StatusBarKind.Health)
+    Player_health.attachToSprite(Dungeon_character)
+    Player_health.value = 1000
+    Player_health.setStatusBarFlag(StatusBarFlag.SmoothTransition, true)
+
+    tiles.setTilemap(tilemap`level1`)
+
+    Normal_ghost_health = statusbars.create(20, 4, StatusBarKind.EnemyHealth)
+    Normal_ghost_health.attachToSprite(myEnemy)
+
+    controller.moveSprite(Dungeon_character, 100, 0)
+    Dungeon_character.ay = 300
+
+    createtoolabrr()
+
+    myEnemy.setPosition(144, 99)
+
+    game.onUpdate(function () {
+        if (Dungeon_character.tileKindAt(TileDirection.Center, assets.tile`myTile0`)) {
+            if (controller.up.isPressed()) {
+                Dungeon_character.vy = -50
+            } else {
+                if (controller.down.isPressed()) {
+                    Dungeon_character.vy = 50
+                }
+            }
+        }
+    })
+
+    game.onUpdate(function () {
+        if (Dungeon_character.tileKindAt(TileDirection.Center, sprites.dungeon.hazardWater)) {
+            Dungeon_character.vy = 25
+            if (controller.up.isPressed()) {
+                Dungeon_character.vy = -50
+            } else {
+                if (controller.down.isPressed()) {
+                    Dungeon_character.vy = 50
+                }
+            }
+        }
+
+        if (Dungeon_character.tileKindAt(TileDirection.Center, assets.tile`myTile1`)) {
+            Dungeon_character.vy = 25
+            if (controller.up.isPressed()) {
+                Dungeon_character.vy = -50
+            } else {
+                if (controller.down.isPressed()) {
+                    Dungeon_character.vy = 50
+                }
+            }
+        }
+    })
+
+    game.onUpdateInterval(1000, function () {
+        Player_health.value += 1
+    })
+
+    game.onUpdateInterval(500, function () {
+        scene.followPath(myEnemy, scene.aStar(tiles.locationOfSprite(myEnemy), tiles.locationOfSprite(Dungeon_character)))
+        game.onUpdateInterval(500, function () {
+            scene.followPath(myEnemy, scene.aStar(tiles.locationOfSprite(myEnemy), tiles.locationOfSprite(Dungeon_character)))
+        })
+    })
+
+    controller.up.onEvent(ControllerButtonEvent.Pressed, function () {
+        if (Dungeon_character.vy == 0) {
+            Dungeon_character.vy = -110
+            music.play(music.createSoundEffect(WaveShape.Square, 400, 600, 255, 0, 100, SoundExpressionEffect.None, InterpolationCurve.Linear), music.PlaybackMode.InBackground)
+        }
+    })
+
+    enum RadioMessage {
+        message1 = 49434,
+        Twentydammage = 62641
+    }
+
+    namespace SpriteKind {
+        export const regenpotion = SpriteKind.create()
+        export const Boss = SpriteKind.create()
+        export const toolbariteam = SpriteKind.create()
+        export const strength_potion = SpriteKind.create()
+    }
+
+    namespace StatusBarKind {
+        export const wepobn = StatusBarKind.create()
+        export const BossHeath = StatusBarKind.create()
+    }
+
+    let inventory: string[] = []
+    let toolbar: Inventory.Toolbar = null
+
+    controller.up.onEvent(ControllerButtonEvent.Pressed, function () {
+        if (Dungeon_character.vy == 0) {
+            Dungeon_character.vy = -110
+            music.play(music.createSoundEffect(WaveShape.Square, 400, 600, 255, 0, 100, SoundExpressionEffect.None, InterpolationCurve.Linear), music.PlaybackMode.InBackground)
+        }
+    })
+
+    game.onUpdateInterval(500, function () {
+        scene.followPath(myEnemy, scene.aStar(tiles.locationOfSprite(myEnemy), tiles.locationOfSprite(Dungeon_character)))
+    })
+
+    enum RadioMessage {
+        message1 = 49434,
+        Twentydammage = 62641
+    }
+
+    namespace SpriteKind {
+        export const regenpotion = SpriteKind.create()
+        export const Boss = SpriteKind.create()
+        export const toolbariteam = SpriteKind.create()
+        export const strength_potion = SpriteKind.create()
+    }
+
+    namespace StatusBarKind {
+        export const wepobn = StatusBarKind.create()
+        export const BossHeath = StatusBarKind.create()
+    }
+
+    let inventory: string[] = []
+    let toolbar: Inventory.Toolbar = null
+
+    controller.up.onEvent(ControllerButtonEvent.Pressed, function () {
+        if (Dungeon_character.vy == 0) {
+            Dungeon_character.vy = -110
+            music.play(music.createSoundEffect(WaveShape.Square, 400, 600, 255, 0, 100, SoundExpressionEffect.None, InterpolationCurve.Linear), music.PlaybackMode.InBackground)
+        }
+    })
+
+    game.onUpdateInterval(500, function () {
+        scene.followPath(myEnemy, scene.aStar(tiles.locationOfSprite(myEnemy), tiles.locationOfSprite(Dungeon_character)))
+    })
+
+    enum RadioMessage {
+        message1 = 49434,
+        Twentydammage = 62641
+    }
+
+    namespace SpriteKind {
+        export const regenpotion = SpriteKind.create()
+        export const Boss = SpriteKind.create()
+        export const toolbariteam = SpriteKind.create()
+        export const strength_potion = SpriteKind.create()
+    }
+
+    namespace StatusBarKind {
+        export const wepobn = StatusBarKind.create()
+        export const BossHeath = StatusBarKind.create()
+    }
+
+    let inventory: string[] = []
+    let toolbar: Inventory.Toolbar = null
+    
+    controller.up.onEvent(ControllerButtonEvent.Pressed, function () {
+        if (Dungeon_character.vy == 0) {
+            Dungeon_character.vy = -110
+            music.play(music.createSoundEffect(WaveShape.Square, 400, 600, 255, 0, 100, SoundExpressionEffect.None, InterpolationCurve.Linear), music.PlaybackMode.InBackground)
+        }
+    })
